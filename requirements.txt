@@ -1,0 +1,9 @@
+google-generativeai
+ollama
+langchain
+langchain-community
+python-dotenv
+colorama
+pypdf
+python-docx
+docx2txt
