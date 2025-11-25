@@ -2,6 +2,8 @@ google-generativeai
 ollama
 langchain
 langchain-community
+langchain-ollama
+langchain-huggingface
 python-dotenv
 colorama
 pypdf
