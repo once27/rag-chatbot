@@ -97,7 +97,7 @@ def load_chunks_from_json(filename="chunks.json"):
     Load chunks from a JSON file and convert them back to LangChain Documents.
     """
     project_root = os.getcwd()
-    file_path = os.path.join(project_root, "raw", filename)
+    file_path = os.path.join(project_root, "json", filename)
 
     if not os.path.exists(file_path):
         print(f"JSON file not found: {file_path}")

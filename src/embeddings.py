@@ -99,19 +99,32 @@ if __name__ == "__main__":
         else:
             vector_db = None
 
-    try: # Search with query
-        if vector_db:
-            test_query = input("\nEnter a test query: ").strip()
+try:
+    # Make sure vector DB exists
+    if not vector_db:
+        print("No vector DB available, exiting.")
+    else:
+        # Ask user for query
+        test_query = input("\nEnter a test query: ").strip()
+
         if not test_query:
             print("Empty query, exiting.")
-        results = retrieve_relevant_docs(vector_db, test_query, score_threshold=0.3)
-        print(f"\n Found {len(results)} result(s).")
-        if not results:
-            print("No results found.")
-        
-        for i, d in enumerate(results, start=1):
-            print(f"\n--- Result {i} ---")
-            print(d.page_content[:150])
-            print("Metadata:", d.metadata)
-    except KeyboardInterrupt:
-            print("\n\nUser cancelled operation.")
+        else:
+            # Perform search
+            results = retrieve_relevant_docs(vector_db, test_query, score_threshold=0.3)
+
+            print(f"\nFound {len(results)} result(s).")
+
+            if not results:
+                print("No results found.")
+            else:
+                # Print results
+                for i, d in enumerate(results, start=1):
+                    print(f"\n--- Result {i} ---")
+                    print(d.page_content[:150])
+                    print("Metadata:", d.metadata)
+
+except KeyboardInterrupt:
+    print("\n\nUser cancelled operation.")
+
+
