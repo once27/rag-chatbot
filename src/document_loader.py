@@ -1,5 +1,7 @@
 import os
+import json
 from langchain_text_splitters import RecursiveCharacterTextSplitter
+from langchain_core.documents import Document
 from typing import List
 from langchain_community.document_loaders import PyPDFLoader, TextLoader, Docx2txtLoader
 
@@ -8,8 +10,6 @@ try:
 except ImportError:
 
     from config import DOCUMENTS_PATH, CHUNK_SIZE, CHUNK_OVERLAP
-
-
 
 def load_documents(folder_path: str = DOCUMENTS_PATH):
 
@@ -64,6 +64,63 @@ def chunk_documents(documents,chunk_size: int = CHUNK_SIZE,overlap: int = CHUNK_
 
     return chunks
 
+def save_chunks_to_json(chunks, filename="chunks.json"):
+    """
+    Save chunks to a JSON file in the 'json' directory of the project root.
+    """
+
+    project_root = os.getcwd() # get the current directory
+    raw_dir = os.path.join(project_root, "json") 
+    
+    if not os.path.exists(raw_dir): # Create the directory if it doesn't exist
+        os.makedirs(raw_dir)
+        print(f"Created directory: {raw_dir}")
+
+    output_path = os.path.join(raw_dir, filename) # File path
+
+    serializable = [] # Data for JSON serialization
+    for chunk in chunks:
+        serializable.append({
+            "content": chunk.page_content,
+            "metadata": chunk.metadata
+        })
+
+    try: # Saving to file
+        with open(output_path, "w", encoding="utf-8") as f:
+            json.dump(serializable, f, indent=4, ensure_ascii=False)
+        print(f"Saved {len(chunks)} chunks into: {output_path}")
+    except Exception as e:
+        print(f" Failed to save JSON: {e}")
+
+def load_chunks_from_json(filename="chunks.json"):
+    """
+    Load chunks from a JSON file and convert them back to LangChain Documents.
+    """
+    project_root = os.getcwd()
+    file_path = os.path.join(project_root, "raw", filename)
+
+    if not os.path.exists(file_path):
+        print(f"JSON file not found: {file_path}")
+        return None
+
+    try:
+        with open(file_path, "r", encoding="utf-8") as f:
+            data = json.load(f)
+
+        # Convert list of dicts back to list of Document objects
+        documents = []
+        for item in data:
+            doc = Document(
+                page_content=item["content"],
+                metadata=item["metadata"]
+            )
+            documents.append(doc)
+            
+        print(f"Loaded {len(documents)} chunks from JSON cache.")
+        return documents
+    except Exception as e:
+        print(f"Error reading JSON: {e}")
+        return None
 
 # testing
 if __name__ == "__main__":
@@ -78,10 +135,12 @@ if __name__ == "__main__":
         
         print(f"Successfully split into {len(chunks)} text chunks.")
         
-        print("Preview of Chunk ") 
-        print(chunks[0].page_content[:100] + "...") 
-        print(f"\n[Source: {chunks[0].metadata.get('source', 'unknown')}]")
-        print()
+        # print("Preview of Chunk ") 
+        # print(chunks[0].page_content[:100] + "...") 
+        # print(f"\n[Source: {chunks[0].metadata.get('source', 'unknown')}]")
+        # print()
+        save_chunks_to_json(chunks)
         
     else:
         print("  No documents found! Please check:")
+

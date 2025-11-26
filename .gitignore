@@ -2,3 +2,5 @@
 __pycache__/
 *.pyc
 documents
+json
+faiss_index
