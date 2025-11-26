@@ -6,6 +6,8 @@ load_dotenv()
 
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 
+GEMINI_MODEL = "gemini-2.5-flash" 
+
 OLLAMA_MODEL = "llama3:8b"  # or "phi3"
 
 EMBEDDING_MODEL = "sentence-transformers/all-MiniLM-L6-v2"
