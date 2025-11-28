@@ -14,6 +14,8 @@ EMBEDDING_MODEL = "sentence-transformers/all-MiniLM-L6-v2"
 
 DOCUMENTS_PATH = "./documents"
 
+LOCAL_MODEL_PATH = os.path.join(os.getcwd(), "models", "all-MiniLM-L6-v2")
+
 CHUNK_SIZE = 250        #500
 
 CHUNK_OVERLAP = 100        #50

@@ -122,25 +122,25 @@ def load_chunks_from_json(filename="chunks.json"):
         print(f"Error reading JSON: {e}")
         return None
 
-# testing
-if __name__ == "__main__":
-    print(f"Scanning folder: {DOCUMENTS_PATH}...")
+# # testing
+# if __name__ == "__main__":
+#     print(f"Scanning folder: {DOCUMENTS_PATH}...")
     
-    loaded_docs = load_documents() # load the document
+#     loaded_docs = load_documents() # load the document
     
-    if loaded_docs:
-        print(f"Found and loaded {len(loaded_docs)} document(s).")
+#     if loaded_docs:
+#         print(f"Found and loaded {len(loaded_docs)} document(s).")
         
-        chunks = chunk_documents(loaded_docs) # chunk the documents
+#         chunks = chunk_documents(loaded_docs) # chunk the documents
         
-        print(f"Successfully split into {len(chunks)} text chunks.")
+#         print(f"Successfully split into {len(chunks)} text chunks.")
         
-        # print("Preview of Chunk ") 
-        # print(chunks[0].page_content[:100] + "...") 
-        # print(f"\n[Source: {chunks[0].metadata.get('source', 'unknown')}]")
-        # print()
-        save_chunks_to_json(chunks)
+#         # print("Preview of Chunk ") 
+#         # print(chunks[0].page_content[:100] + "...") 
+#         # print(f"\n[Source: {chunks[0].metadata.get('source', 'unknown')}]")
+#         # print()
+#         save_chunks_to_json(chunks)
         
-    else:
-        print("  No documents found! Please check:")
+#     else:
+#         print("  No documents found! Please check:")
 

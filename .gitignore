@@ -4,3 +4,5 @@ __pycache__/
 documents
 json
 faiss_index
+models
+tests

@@ -1,7 +1,7 @@
 import google.generativeai as genai
 from langchain_ollama import OllamaLLM as Ollama
 import time
-import src.config
+import config
 import concurrent.futures
 
 class LLMHandler:
@@ -13,9 +13,9 @@ class LLMHandler:
     
     def setup_gemini(self):
         try:
-            genai.configure(api_key=src.config.GEMINI_API_KEY)
-            self.gemini = genai.GenerativeModel(src.config.GEMINI_MODEL)
-            print(f"Gemini Configured: {src.config.GEMINI_MODEL}")
+            genai.configure(api_key=config.GEMINI_API_KEY)
+            self.gemini = genai.GenerativeModel(config.GEMINI_MODEL)
+            print(f"Gemini Configured: {config.GEMINI_MODEL}")
         except Exception as e:
             print(f"Gemini Setup Failed: {e}")
             self.gemini = None
@@ -24,8 +24,8 @@ class LLMHandler:
     def setup_ollama(self):
         """Configure Local Ollama"""
         try:
-            self.ollama = Ollama(model=src.config.OLLAMA_MODEL)
-            print(f"Ollama Configured: {src.config.OLLAMA_MODEL}")
+            self.ollama = Ollama(model=config.OLLAMA_MODEL)
+            print(f"Ollama Configured: {config.OLLAMA_MODEL}")
         except Exception as e:
             print(f"Ollama Setup Failed: {e}")
             self.ollama = None
@@ -49,7 +49,7 @@ class LLMHandler:
                 future = executor.submit(self._call_gemini, prompt) # Submit the task
                 
                 response_text = future.result(timeout=10) # we wait for 10 seconds
-                model_name = f"Gemini ({src.config.GEMINI_MODEL})"
+                model_name = f"Gemini ({config.GEMINI_MODEL})"
 
             except concurrent.futures.TimeoutError:
                 print("\nGemini Timed Out (took >10s). Switching to fallback...")
@@ -69,25 +69,25 @@ class LLMHandler:
         if self.ollama: # This runs if Gemini failed OR timed out
             try:
                 response = self.ollama.invoke(prompt)
-                return response.strip(), f"Ollama ({src.config.OLLAMA_MODEL})"
+                return response.strip(), f"Ollama ({config.OLLAMA_MODEL})"
             except Exception as e:
                 return f"Error: Both models failed. Last error: {e}", "SYSTEM_FAILURE"
         
         return "Error: No models configured.", "SYSTEM_FAILURE"
 
 # --- Test Block ---
-if __name__ == "__main__":
-    print("--- Initializing LLM Handler ---")
-    bot = LLMHandler()
+# if __name__ == "__main__":
+#     print("--- Initializing LLM Handler ---")
+#     bot = LLMHandler()
     
-    test_prompt = "Explain in one sentence why the sky is blue."
+#     test_prompt = "Explain in one sentence why the sky is blue."
     
-    print(f"\nTest Prompt: '{test_prompt}'")
+#     print(f"\nTest Prompt: '{test_prompt}'")
     
-    start_time = time.time()
-    response, model_used = bot.generate_response(test_prompt)
-    end_time = time.time()
+#     start_time = time.time()
+#     response, model_used = bot.generate_response(test_prompt)
+#     end_time = time.time()
     
-    print(f"\nAnswer: {response}")
-    print(f"\nModel Used: {model_used}")
-    print(f"\nTime Taken: {end_time - start_time:.2f}s")
+#     print(f"\nAnswer: {response}")
+#     print(f"\nModel Used: {model_used}")
+#     print(f"\nTime Taken: {end_time - start_time:.2f}s")
