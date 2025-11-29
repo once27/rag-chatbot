@@ -75,7 +75,7 @@ rag-chatbot/
 
 ### 1. Clone the repo
 ```
-git clone <repo url>
+git clone https://github.com/once27/rag-chatbot/
 cd rag-chatbot
 ```
 
@@ -151,7 +151,7 @@ Only Gemini requires the internet — and the system automatically falls back.
 
 ## 💻 Running the Chatbot
 
-### Method 1 — Recommended
+### Method 1 
 ```
 python -m src.chatbot
 ```
