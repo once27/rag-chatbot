@@ -6,3 +6,4 @@ json
 faiss_index
 models
 tests
+logs
