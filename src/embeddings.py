@@ -1,7 +1,7 @@
 import os
 from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_community.vectorstores import FAISS
-import config
+import src.config as config
 FAISS_PATH = os.path.join(os.getcwd(), "faiss_index")
 LOCAL_MODEL_PATH = os.path.join(os.getcwd(), "models", "all-MiniLM-L6-v2")
 def get_embedding_model():

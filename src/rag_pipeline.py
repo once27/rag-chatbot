@@ -91,72 +91,72 @@ class RAGPipeline:
         return answer_text, docs, model_used
 
 
-# test
-if __name__ == "__main__":
+# # test
+# if __name__ == "__main__":
 
-    # Priority: 1. Load Existing FAISS -> 2. Load JSON Cache -> 3. Load Raw Docs
+#     # Priority: 1. Load Existing FAISS -> 2. Load JSON Cache -> 3. Load Raw Docs
     
-    vector_db = load_vector_store()
+#     vector_db = load_vector_store()
     
-    if not vector_db:
-        print("No existing FAISS index found. Checking for JSON cache...")
+#     if not vector_db:
+#         print("No existing FAISS index found. Checking for JSON cache...")
 
-        chunks = load_chunks_from_json()
+#         chunks = load_chunks_from_json()
 
-        if not chunks:
-            print("No JSON cache found. Reading source documents from folder...")
-            docs = load_documents()
-            chunks = chunk_documents(docs)
+#         if not chunks:
+#             print("No JSON cache found. Reading source documents from folder...")
+#             docs = load_documents()
+#             chunks = chunk_documents(docs)
         
-            if chunks: # if no json cache found then build it
-                save_chunks_to_json(chunks) 
+#             if chunks: # if no json cache found then build it
+#                 save_chunks_to_json(chunks) 
 
-        if chunks:
-            # This creates the index AND saves it to disk (inside embeddings.py logic)
-            vector_db = create_vector_store(chunks)
-        else:
-            print("Error: No documents found to index.")
-            sys.exit(1)
+#         if chunks:
+#             # This creates the index AND saves it to disk (inside embeddings.py logic)
+#             vector_db = create_vector_store(chunks)
+#         else:
+#             print("Error: No documents found to index.")
+#             sys.exit(1)
 
-    # 2. Initialize LLM 
-    print("\nInitializing LLM Handler...")
-    llm_handler = LLMHandler()
+#     # 2. Initialize LLM 
+#     print("\nInitializing LLM Handler...")
+#     llm_handler = LLMHandler()
 
-    # 3. Start Pipeline
-    rag = RAGPipeline(vector_db=vector_db, llm_handler=llm_handler)
+#     # 3. Start Pipeline
+#     rag = RAGPipeline(vector_db=vector_db, llm_handler=llm_handler)
 
-    print("\nSystem Ready! Type 'exit' to quit.")
+#     print("\nSystem Ready! Type 'exit' to quit.")
 
-    try:
-        while True:
-            user_q = input("\nYour Question: ").strip()
+#     try:
+#         while True:
+#             user_q = input("\nYour Question: ").strip()
             
-            if not user_q:
-                continue
+#             if not user_q:
+#                 continue
                 
-            if user_q.lower() in {"exit", "quit"}:
-                print("Goodbye!")
-                break
+#             if user_q.lower() in {"exit", "quit"}:
+#                 print("Goodbye!")
+#                 break
 
-            print("   Thinking...", end="\r")
+#             print("   Thinking...", end="\r")
             
-            # Run Query
-            answer, sources, model = rag.query(user_q)
+#             # Run Query
+#             answer, sources, model = rag.query(user_q)
 
-            # Display Results
-            print("\n")
-            print(f"Assistant ({model}):")
-            print(answer)
+#             # Display Results
+#             print("\n")
+#             print(f"Assistant ({model}):")
+#             print(answer)
 
-            if sources:
-                print(f"Context used ({len(sources)} chunks):")
-                for i, doc in enumerate(sources, start=1):
-                    src = doc.metadata.get('source', 'unknown').split(os.sep)[-1]
-                    page = doc.metadata.get('page', 'N/A')
-                    print(f"{src} ")#(Page {page})")
-            else:
-                print(" No relevant documents found in the database.")
-            print("\n")
+#             if sources:
+#                 print(f"Context used ({len(sources)} chunks):")
+#                 for i, doc in enumerate(sources, start=1):
+#                     src = doc.metadata.get('source', 'unknown').split(os.sep)[-1]
+#                     page = doc.metadata.get('page', 'N/A')
+#                     print(f"{src} ")#(Page {page})")
+#             else:
+#                 print(" No relevant documents found in the database.")
+#             print("\n")
 
-    except KeyboardInterrupt:
-        print("\n\nGoodbye!")
+#     except KeyboardInterrupt:
+#         print("\n\nGoodbye!")

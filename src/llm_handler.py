@@ -1,7 +1,7 @@
 import google.generativeai as genai
 from langchain_ollama import OllamaLLM as Ollama
 import time
-import config
+import src.config as config
 import concurrent.futures
 
 class LLMHandler:
