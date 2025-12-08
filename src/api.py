@@ -4,7 +4,11 @@ import time
 from typing import List
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI, HTTPException
+# --- NEW IMPORTS FOR SECURITY ---
+from fastapi import FastAPI, HTTPException, Security, status, Depends
+from fastapi.security import APIKeyHeader
+from dotenv import load_dotenv  # Needs: pip install python-dotenv
+
 from pydantic import BaseModel
 
 # Make project imports work regardless of how we run
@@ -18,16 +22,44 @@ from .document_loader import load_chunks_from_json, load_documents, chunk_docume
 from .llm_handler import LLMHandler
 from .rag_pipeline import RAGPipeline
 
-#pydantic models
+# --- SECURITY SETUP ---
+# 1. Load the secrets from the .env file
+load_dotenv() 
 
+# 2. Get the key from the environment
+SERVER_API_KEY = os.getenv("RAG_API_KEY")
+
+# 3. Define the header key (User must send "X-API-Key" in headers)
+API_KEY_NAME = "X-API-Key"
+api_key_header = APIKeyHeader(name=API_KEY_NAME, auto_error=True)
+
+# 4. Security Logic Function
+async def get_api_key(api_key_header: str = Security(api_key_header)):
+    """
+    Checks if the header sent by the user matches the SERVER_API_KEY in our .env file.
+    """
+    if SERVER_API_KEY is None:
+        # Safety net: If you forgot to set the key on GCP, don't let anyone in.
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Server Security Configuration Error: API Key missing on server."
+        )
+    
+    if api_key_header != SERVER_API_KEY:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Invalid API Key. Access Denied."
+        )
+    return api_key_header
+
+
+# --- PYDANTIC MODELS ---
 class ChatRequest(BaseModel):
     query: str
-
 
 class SourceItem(BaseModel):
     source: str
     preview: str
-
 
 class ChatResponse(BaseModel):
     question: str
@@ -36,6 +68,8 @@ class ChatResponse(BaseModel):
     sources: List[SourceItem]
     elapsed_seconds: float
 
+
+# --- LIFESPAN MANAGER ---
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     print("🚀 Starting RAG API with lifespan...")
@@ -71,13 +105,16 @@ async def lifespan(app: FastAPI):
     print("🛑 Shutting down RAG API...")
 
 
-
 app = FastAPI(
     title="RAG Chatbot API",
     version="1.0.0",
     lifespan=lifespan,
 )
 
+# --- ENDPOINTS ---
+
+# 1. Health Check - LEFT OPEN (No Security)
+# This allows GCP or Uptime monitors to ping your server without needing a key.
 @app.get("/health")
 def health_check():
     """
@@ -99,14 +136,12 @@ def health_check():
     }
 
 
-@app.post("/chat", response_model=ChatResponse)
+# 2. Chat Endpoint - PROTECTED
+# We add `dependencies=[Depends(get_api_key)]` to lock this door.
+@app.post("/chat", response_model=ChatResponse, dependencies=[Depends(get_api_key)])
 def chat(request: ChatRequest):
     """
     Main chat endpoint.
-    Uses the RAG pipeline which:
-      - retrieves chunks from FAISS
-      - builds a context-aware prompt
-      - uses Gemini (primary) with Ollama fallback
     """
     rag: RAGPipeline = getattr(app.state, "rag", None)
     if rag is None:
@@ -124,6 +159,7 @@ def chat(request: ChatRequest):
         sources: List[SourceItem] = []
         for d in docs or []:
             src = d.metadata.get("source", d.metadata.get("source_file", "unknown"))
+            # Simple cleanup for preview
             preview = d.page_content[:240].replace("\n", " ")
             sources.append(SourceItem(source=src, preview=preview))
 
@@ -139,13 +175,11 @@ def chat(request: ChatRequest):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@app.post("/admin/reload-index")
+# 3. Reload Endpoint - PROTECTED
+@app.post("/admin/reload-index", dependencies=[Depends(get_api_key)])
 def reload_index():
     """
-    Rebuilds BOTH:
-      - json/chunks.json
-      - faiss_index/
-    and refreshes the in-memory vector store + RAG pipeline.
+    Rebuilds chunks and index.
     """
     rag: RAGPipeline = getattr(app.state, "rag", None)
     llm_handler: LLMHandler = getattr(app.state, "llm_handler", None)
@@ -164,4 +198,3 @@ def reload_index():
     app.state.rag = RAGPipeline(vector_db=vector_db, llm_handler=llm_handler)
 
     return {"status": "ok", "message": "Chunks and index rebuilt successfully."}
-
