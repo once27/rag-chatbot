@@ -1,3 +1,9 @@
 .env
 __pycache__/
 *.pyc
+documents
+json
+faiss_index
+models
+tests
+logs
