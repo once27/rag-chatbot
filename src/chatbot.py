@@ -1,4 +1,3 @@
-# src/chatbot.py
 """
 Terminal Chatbot wrapper around your RAG pipeline.
 Features:
@@ -67,14 +66,18 @@ class TerminalChatbot:
         # model info from llm handler if possible
         try:
             llm = self.rag.llm_handler
-            gem = getattr(llm, "gemini", None) # if gemini fails prevents to program from crashing by setting it to null
-            oll = getattr(llm, "ollama", None)
+            gem = getattr(llm, "gemini", None) 
             gem_name = getattr(gem, "model_name", "gemini (unknown)") if gem else "Gemini (not init)"
-            oll_name = getattr(oll, "model", "ollama (unknown)") if oll else "Ollama (not init)"
+            
             print(f"  Primary LLM: {gem_name}")
-            print(f"  Fallback LLM: {oll_name}")
         except Exception:
             print("  LLM handler status: unavailable")
+
+        # vector store / chunks
+        faiss_path = os.path.join(PROJECT_ROOT, "faiss_index")
+        json_path = os.path.join(PROJECT_ROOT, "json", "chunks.json")
+        print(f"  FAISS index present: {os.path.isdir(faiss_path)}")
+        print(f"  Chunks JSON present: {os.path.exists(json_path)}")
 
         # vector store / chunks
         faiss_path = os.path.join(PROJECT_ROOT, "faiss_index")
