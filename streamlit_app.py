@@ -6,7 +6,6 @@ from typing import List
 
 import streamlit as st
 
-
 PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
 SRC_DIR = os.path.join(PROJECT_ROOT, "src")
 if SRC_DIR not in sys.path:
@@ -23,6 +22,7 @@ from document_loader import (
 from llm_handler import LLMHandler
 from rag_pipeline import RAGPipeline
 
+#
 
 # pipeline
 def init_pipeline():
@@ -48,7 +48,10 @@ def init_pipeline():
                     save_chunks_to_json(chunks)
                 else:
                     st.error("No chunks could be created. Add documents to the documents/ folder.")
-                    raise RuntimeError("No chunks available.")
+                    st.warning("No chunks available. Please upload documents using the sidebar and click 'Save & Rebuild index'.")
+                    st.session_state["rag_pipeline"] = None
+                    st.session_state["vector_db"] = None
+                    return
 
             vector_db = create_vector_store(chunks)
 
@@ -97,7 +100,12 @@ def rebuild_index_from_documents():
         vector_db = create_vector_store(chunks)
 
         # Update pipeline in session_state
-        llm_handler = st.session_state.get("rag_pipeline").llm_handler if st.session_state.get("rag_pipeline") else LLMHandler()
+        # Check if pipeline exists to reuse llm_handler, else create new
+        if st.session_state.get("rag_pipeline"):
+            llm_handler = st.session_state["rag_pipeline"].llm_handler
+        else:
+            llm_handler = LLMHandler()
+            
         rag = RAGPipeline(vector_db=vector_db, llm_handler=llm_handler)
         st.session_state["vector_db"] = vector_db
         st.session_state["rag_pipeline"] = rag
@@ -141,6 +149,7 @@ def main():
             type=["pdf", "txt", "docx"],
             accept_multiple_files=True,
             help="Upload files to be indexed. They will be saved into the documents folder.",
+            key="documents_uploader",
         )
 
         if uploaded_files:
@@ -171,9 +180,19 @@ def main():
         documents_dir = config.DOCUMENTS_PATH
         st.write(f"**Documents path:** `{documents_dir}`")
 
-    # Querry With Respnse
+    # Initialize Pipeline
     init_pipeline()
-    rag: RAGPipeline = st.session_state["rag_pipeline"]
+    
+    # Retrieve pipeline from session state (safely)
+    rag = st.session_state.get("rag_pipeline", None)
+
+    # If no pipeline, tell user and STOP here.
+    if rag is None:
+        st.info(
+            "RAG pipeline is not initialized yet. "
+            "Please upload documents in the sidebar and click 'Save & Rebuild index'."
+        )
+        return
 
     st.markdown("### Ask a Question")
 
